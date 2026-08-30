@@ -1,0 +1,8 @@
+{
+  "playbook_rows": 6163,
+  "review_for_refresh_rows": 2129,
+  "review_for_refresh_share": 0.3454,
+  "average_model_decline_score": 0.4811,
+  "grouped_test_clients": 7,
+  "retrain_trigger": "Review model performance and feature definitions when data mix, outcome definition, or measured Precision@20 changes materially."
+}
