@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transparent Refresh Opportunity Scoring</title>
+    <meta
+      name="description"
+      content="A client-grouped, leakage-audited content review prioritization study using the FlyRank ML Internship dataset."
+    />
+
+    <style>
+      :root {
+        --ink: #172033;
+        --muted: #596579;
+        --paper: #f7f9fc;
+        --card: #ffffff;
+        --line: #dce3ed;
+        --blue: #2563eb;
+        --teal: #0f766e;
+        --amber: #b45309;
+        --red: #be123c;
+        --shadow: 0 10px 32px rgba(22, 32, 51, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+        line-height: 1.65;
+      }
+
+      a {
+        color: var(--blue);
+      }
+      a:hover {
+        color: #1d4ed8;
+      }
+
+      .hero {
+        color: white;
+        background: linear-gradient(135deg, #172033, #1e3a8a);
+        padding: 76px 24px 56px;
+      }
+
+      .wrap {
+        width: min(980px, calc(100% - 40px));
+        margin: auto;
+      }
+
+      .eyebrow {
+        color: #bfdbfe;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 850px;
+        margin: 12px 0 16px;
+        font-size: clamp(2.1rem, 5vw, 4rem);
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+      }
+
+      .subtitle {
+        max-width: 740px;
+        margin: 0;
+        color: #dbeafe;
+        font-size: 1.15rem;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .chip {
+        padding: 7px 11px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        color: #eff6ff;
+        font-size: 0.86rem;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.95);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(10px);
+      }
+
+      nav .wrap {
+        display: flex;
+        gap: 17px;
+        overflow-x: auto;
+        padding: 12px 0;
+        white-space: nowrap;
+      }
+
+      nav a {
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      main {
+        padding: 44px 0 80px;
+      }
+
+      section {
+        margin: 0 0 48px;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 1.6rem;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      h3 {
+        margin: 24px 0 8px;
+        font-size: 1.05rem;
+      }
+
+      p {
+        margin: 0 0 14px;
+      }
+
+      .lead {
+        font-size: 1.08rem;
+        color: #334155;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+
+      .metric {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 1.7rem;
+        letter-spacing: -0.04em;
+      }
+
+      .notice {
+        border-left: 4px solid var(--amber);
+        background: #fffbeb;
+        padding: 17px 19px;
+        border-radius: 0 12px 12px 0;
+        color: #713f12;
+      }
+
+      .safe {
+        border-left-color: var(--teal);
+        background: #f0fdfa;
+        color: #134e4a;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 0.94rem;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .chart {
+        margin-top: 20px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 185px 1fr 56px;
+        align-items: center;
+        gap: 12px;
+        margin: 12px 0;
+        font-size: 0.9rem;
+      }
+
+      .track {
+        overflow: hidden;
+        height: 14px;
+        border-radius: 999px;
+        background: #e8edf4;
+      }
+
+      .bar {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--blue);
+      }
+
+      .bar.teal {
+        background: var(--teal);
+      }
+      .bar.amber {
+        background: var(--amber);
+      }
+      .bar.red {
+        background: var(--red);
+      }
+
+      ul {
+        padding-left: 21px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+
+      .two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      footer {
+        padding: 35px 0;
+        background: #172033;
+        color: #dbeafe;
+      }
+
+      footer p {
+        margin: 0;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .two-column {
+          grid-template-columns: 1fr;
+        }
+        .bar-row {
+          grid-template-columns: 125px 1fr 48px;
+        }
+        .hero {
+          padding-top: 56px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <div class="eyebrow">
+          FlyRank ML Internship · Capstone Research Paper
+        </div>
+        <h1>Transparent Refresh Opportunity Scoring for Content Review</h1>
+        <p class="subtitle">
+          A client-grouped and leakage-audited study of which pseudonymized
+          content pages should be prioritized for human review.
+        </p>
+
+        <div class="meta">
+          <span class="chip">Author: Subhash Kashyap</span>
+          <span class="chip">Lane: Refresh / Content Opportunity Scoring</span>
+          <span class="chip">Dataset: 30,000 content records</span>
+          <span class="chip">Validation: Client-grouped</span>
+        </div>
+      </div>
+    </header>
+
+    <nav>
+      <div class="wrap">
+        <a href="#abstract">Abstract</a>
+        <a href="#problem">Problem</a>
+        <a href="#data">Data</a>
+        <a href="#method">Methodology</a>
+        <a href="#results">Results</a>
+        <a href="#recommendations">Recommendations</a>
+        <a href="#limits">Limits</a>
+        <a href="#reproducibility">Reproducibility</a>
+      </div>
+    </nav>
+
+    <main class="wrap">
+      <section id="abstract">
+        <h2>Abstract</h2>
+        <div class="card">
+          <p>
+            This project asks which content pages should be prioritized for
+            human review when a content team has limited capacity. It uses the
+            FlyRank ML Internship anonymized starter dataset, containing 30,000
+            pseudonymized content records across 32 clients. I compared a
+            transparent stale-and-visible baseline with Logistic Regression and
+            then re-ran the model with a stricter client-grouped,
+            leakage-audited design. In the initial same-split comparison,
+            Logistic Regression reached Precision@20 of 80.0% versus 45.0% for
+            the baseline; under the stricter grouped validation, Precision@20
+            was 50.0%. The output is a ranked, human-reviewed action queue that
+            supports content review decisions and does not claim that refreshing
+            a page causes improved search performance.
+          </p>
+        </div>
+      </section>
+
+      <section id="problem">
+        <h2>Introduction / problem statement</h2>
+        <p class="lead">
+          Content teams cannot inspect every page at once. This project supports
+          a practical decision: which pages should a human review first for
+          possible refresh work?
+        </p>
+
+        <div class="two-column">
+          <div class="card">
+            <h3>Unit and output</h3>
+            <p>
+              The unit of analysis is one pseudonymized content page. The output
+              is a ranked review queue with an action label, reason code, and
+              model score.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Cost of a wrong call</h3>
+            <p>
+              A false positive can waste editorial time. A false negative can
+              leave a potentially important page unreviewed. The tool therefore
+              supports prioritization, not automatic action.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="data">
+        <h2>Data and public-safety controls</h2>
+
+        <div class="grid">
+          <div class="metric">
+            <span>Content records</span>
+            <strong>30,000</strong>
+          </div>
+          <div class="metric">
+            <span>Pseudonymized clients</span>
+            <strong>32</strong>
+          </div>
+          <div class="metric">
+            <span>Columns</span>
+            <strong>44</strong>
+          </div>
+          <div class="metric">
+            <span>Grouped test clients</span>
+            <strong>7</strong>
+          </div>
+        </div>
+
+        <h3>Dataset</h3>
+        <p>
+          The analysis uses
+          <code>data/raw/content_refresh_anonymized.csv</code> from the FlyRank
+          ML Internship starter release. It contains anonymized numeric and
+          categorical content-performance signals.
+        </p>
+
+        <h3>What was excluded</h3>
+        <ul>
+          <li>
+            <code>content_id</code> and <code>client_id</code> were used only
+            for identification and grouped validation, never as model features.
+          </li>
+          <li>
+            <code>trend_direction</code> was the outcome label and was excluded
+            from features.
+          </li>
+          <li>
+            <code>trend_pct</code> was excluded because it directly measures the
+            same observed trend outcome.
+          </li>
+          <li>
+            30-day comparison-window fields and 90-day performance totals were
+            excluded from the strict audit because they may overlap with the
+            measured trend period.
+          </li>
+          <li>
+            No client names, domains, URLs, titles, raw queries, credentials, or
+            private exports appear in this paper.
+          </li>
+        </ul>
+
+        <div class="notice safe">
+          <strong>Public-safety boundary:</strong> this paper reports only
+          aggregated results and pseudonymized analysis. It does not disclose
+          client-identifying information.
+        </div>
+      </section>
+
+      <section id="method">
+        <h2>Methodology</h2>
+
+        <h3>Observed outcome</h3>
+        <p>
+          The retrospective outcome is whether a page’s observed
+          <code>trend_direction</code> was <code>down</code>. This is an
+          observed historical pattern, not a label for whether a future refresh
+          will succeed.
+        </p>
+
+        <h3>Baseline</h3>
+        <p>
+          The transparent Week-4 baseline assigned 60% weight to relative
+          content age/staleness and 40% weight to current 90-day impressions. It
+          assigned selected pages the reason code
+          <code>STALE_VISIBLE_PAGE</code>.
+        </p>
+
+        <h3>Model and strict feature set</h3>
+        <p>
+          Logistic Regression was selected because it is transparent, quick to
+          train, and suitable for an explainable ranking workflow. The stricter
+          leakage-audited feature set used search volume, competition, CPC, word
+          count, character count, content age, days since update, competition
+          level, content type, and main intent.
+        </p>
+
+        <h3>Validation design</h3>
+        <p>
+          The final audit used a client-grouped 80/20 split. All pages from a
+          client appeared only in training or testing, never both. This is more
+          conservative than a random page-level split because it tests whether
+          the model generalizes to previously unseen clients.
+        </p>
+      </section>
+
+      <section id="results">
+        <h2>Results</h2>
+
+        <div class="notice">
+          <strong>How to read the results:</strong> the 80.0% initial result
+          came from a broader feature set. The stricter client-grouped and
+          leakage-audited result is the primary final estimate because it uses a
+          more cautious feature definition.
+        </div>
+
+        <h3>Initial same-split model versus baseline comparison</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Approach</th>
+              <th>Precision@20</th>
+              <th>Average Precision</th>
+              <th>ROC-AUC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Stale-and-visible baseline</td>
+              <td>45.0%</td>
+              <td>0.476</td>
+              <td>0.473</td>
+            </tr>
+            <tr>
+              <td>Initial Logistic Regression</td>
+              <td>80.0%</td>
+              <td>0.597</td>
+              <td>0.596</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Validation audit: random versus client-grouped split</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Validation design</th>
+              <th>Precision@20</th>
+              <th>Average Precision</th>
+              <th>ROC-AUC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Random page-level split</td>
+              <td>55.0%</td>
+              <td>0.636</td>
+              <td>0.629</td>
+            </tr>
+            <tr>
+              <td>Client-grouped split</td>
+              <td>50.0%</td>
+              <td>0.529</td>
+              <td>0.533</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="chart">
+          <h3>Precision@20 by evaluation setting</h3>
+          <div class="bar-row">
+            <span>Initial model</span>
+            <div class="track">
+              <div class="bar teal" style="width: 80%"></div>
+            </div>
+            <strong>80%</strong>
+          </div>
+          <div class="bar-row">
+            <span>Initial baseline</span>
+            <div class="track">
+              <div class="bar amber" style="width: 45%"></div>
+            </div>
+            <strong>45%</strong>
+          </div>
+          <div class="bar-row">
+            <span>Strict grouped model</span>
+            <div class="track"><div class="bar" style="width: 50%"></div></div>
+            <strong>50%</strong>
+          </div>
+          <div class="bar-row">
+            <span>Grouped base rate</span>
+            <div class="track">
+              <div class="bar red" style="width: 51.1%"></div>
+            </div>
+            <strong>51.1%</strong>
+          </div>
+        </div>
+
+        <h3>Error analysis</h3>
+        <p>
+          False positives were pages assigned a higher downward-trend score that
+          did not have an observed
+          <code>down</code> trend. False negatives were pages with an observed
+          downward trend but a lower predicted score. Likely explanations
+          include seasonality, changing search intent, competition, and
+          client-specific context that was not available in the strict feature
+          set.
+        </p>
+      </section>
+
+      <section id="recommendations">
+        <h2>Ranked recommendations</h2>
+        <p class="lead">
+          The playbook ranks pages for human review. It never authorizes
+          automatic content changes.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Action / reason code</th>
+              <th>Pages</th>
+              <th>Mean score</th>
+              <th>Suggested human next step</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>DECLINE_RISK_REVIEW</code></td>
+              <td>1,414</td>
+              <td>0.613</td>
+              <td>
+                Review intent, accuracy, competition, and editorial value.
+              </td>
+            </tr>
+            <tr>
+              <td><code>STALE_HIGH_DEMAND</code></td>
+              <td>512</td>
+              <td>0.505</td>
+              <td>
+                Check whether an older page still matches demand and search
+                intent.
+              </td>
+            </tr>
+            <tr>
+              <td><code>STALE_THIN_CONTENT</code></td>
+              <td>203</td>
+              <td>0.557</td>
+              <td>
+                Assess whether content depth or freshness needs editorial
+                review.
+              </td>
+            </tr>
+            <tr>
+              <td><code>LOWER_PRIORITY_MONITOR</code></td>
+              <td>4,034</td>
+              <td>0.428</td>
+              <td>Monitor rather than prioritize for immediate review.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="chart">
+          <h3>Held-out action playbook</h3>
+          <div class="bar-row">
+            <span>Decline-risk review</span>
+            <div class="track"><div class="bar" style="width: 23%"></div></div>
+            <strong>1,414</strong>
+          </div>
+          <div class="bar-row">
+            <span>Stale, high demand</span>
+            <div class="track">
+              <div class="bar teal" style="width: 8.3%"></div>
+            </div>
+            <strong>512</strong>
+          </div>
+          <div class="bar-row">
+            <span>Stale, thin content</span>
+            <div class="track">
+              <div class="bar amber" style="width: 3.3%"></div>
+            </div>
+            <strong>203</strong>
+          </div>
+          <div class="bar-row">
+            <span>Monitor</span>
+            <div class="track">
+              <div class="bar red" style="width: 65.4%"></div>
+            </div>
+            <strong>4,034</strong>
+          </div>
+        </div>
+
+        <p>
+          In total, 2,129 of 6,163 held-out pages (34.54%) were marked
+          <code>REVIEW_FOR_REFRESH</code>. Every recommendation requires a human
+          to inspect intent, factual accuracy, freshness, seasonality, indexing,
+          competition, and editorial value before acting.
+        </p>
+      </section>
+
+      <section id="limits">
+        <h2>Limitations and honest framing</h2>
+        <div class="card">
+          <ul>
+            <li>
+              The model measures observed associations in one anonymized starter
+              dataset.
+            </li>
+            <li>It does not predict Google’s algorithm.</li>
+            <li>
+              It does not prove that refreshing a page will improve performance.
+            </li>
+            <li>
+              The stricter grouped result is modest, so the model should be
+              treated as a limited decision-support aid.
+            </li>
+            <li>
+              No action should be automated: do not automatically rewrite,
+              publish, delete, merge, prune, change metadata, or alter URLs.
+            </li>
+            <li>
+              Review or retrain if the data mix changes, the outcome definition
+              changes, Precision@20 materially changes, or editors repeatedly
+              flag weak recommendations.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="reproducibility">
+        <h2>Reproducibility</h2>
+        <p>
+          The full notebook trail, figures, and metrics receipts are available
+          in the project repository. The analysis uses
+          <code>random_state=42</code> and an 80/20 client-grouped split.
+        </p>
+
+        <ul>
+          <li>
+            <a
+              href="https://github.com/Subhash-2910/flyrank-ML-T1"
+              target="_blank"
+              rel="noreferrer"
+              >Project repository</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://github.com/Subhash-2910/flyrank-ML-T1/blob/main/work/notebooks/w04_baseline_score.ipynb"
+              target="_blank"
+              rel="noreferrer"
+              >Week 4 baseline notebook</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://github.com/Subhash-2910/flyrank-ML-T1/blob/main/work/notebooks/w05_model.ipynb"
+              target="_blank"
+              rel="noreferrer"
+              >Week 5 model notebook</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://github.com/Subhash-2910/flyrank-ML-T1/blob/main/work/notebooks/w06_validation_audit.ipynb"
+              target="_blank"
+              rel="noreferrer"
+              >Week 6 validation audit</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://github.com/Subhash-2910/flyrank-ML-T1/blob/main/work/notebooks/w07_action_playbook.ipynb"
+              target="_blank"
+              rel="noreferrer"
+              >Week 7 action playbook</a
+            >
+          </li>
+        </ul>
+
+        <p>
+          From a fresh clone, install dependencies with
+          <code>python -m pip install -r requirements.txt</code>, then run the
+          notebooks in Week 4 through Week 7 order.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <p>
+          Built on the
+          <a href="https://flyrank.ai" target="_blank" rel="noreferrer"
+            >FlyRank ML Internship dataset</a
+          >.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
